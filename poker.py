@@ -7,13 +7,12 @@ from player import Player
 
 class PokerAction:
     fold = 0
-    call = 1  # Note(jesse): includes check (nothing to add to pot)
+    call = 1     # Note(jesse): includes check (nothing to add to pot)
     raising = 2  # Note(jesse): can't use "raise" because it's a keyword
     count = 3
 
 
 class PokerStrategy:
-
     random = 0
     reinforced_learning = 1
     count = 2
@@ -24,18 +23,15 @@ def poker_init(state: GameState):
     for i in range(state.player_count * 2):
         state.draw_card(i % state.player_count)
 
-
 def poker_end(state: GameState, winner: int):
     # Give money to the player.
     state.players[winner].add_money(state.pot)
     for player in state.players:
-        p_cards = player.hand
         # Add player's cards back into the deck
-        state.deck += p_cards
+        state.append_cards(player.hand);
         # Clear the player's hand.
         player.hand.clear()
         player.set_folded(False)
-
 
 def play_poker(state: GameState, strategy: int, printing: bool):
     poker_init(state)
@@ -102,7 +98,8 @@ def play_poker(state: GameState, strategy: int, printing: bool):
                 state.community_cards.append(state.deck.pop())
         elif turn < 3:
             state.community_cards.append(state.deck.pop())
-    poker_assess_players(state, printing)
+    winner = poker_assess_players(state, printing)
+    poker_end(state, winner);
 
 
 # Note(jesse):
@@ -199,21 +196,23 @@ def poker_hand_value(state: GameState, hand: List[Card]) -> tuple[int, int]:
 
 
 # Todo(jesse): Finish this
-def poker_assess_players(state: GameState, printing: bool = True):
-    best_player = 0
+def poker_assess_players(state: GameState, printing: bool = True) -> int:
+    best_player = 0;
     best_hand = 0
     best_high = 0
-    for player in state.players:
+    for i in range(len(state.players)):
+        player = state.players[i];
         hand = player.hand
         player_value, high = poker_hand_value(state, hand)
         print(
             f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, high: {high}, {hand_value_strings[player_value]}"
         )
         if player_value > best_hand:
-            best_player = player
+            best_player = i
             best_hand = player_value
             best_high = high
         # elif player_value == best_hand && high >
+    return best_player;
 
 
 def get_poker_action(

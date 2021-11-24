@@ -98,3 +98,6 @@ class GameState:
         """
         card = self._deck.pop()
         self._players[player].add_card(card)
+
+    def append_cards(self, cards: List[Card]):
+        self._deck += cards;
