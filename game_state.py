@@ -80,15 +80,6 @@ class GameState:
         self._pot = 0
 
     def shuffle_deck(self):
-        # Research/Note(jesse): You can not generate a permutation of any length 52
-        # without at least 226 bits of state. We can't generate all possible permutations
-        # of a deck of cards here... 52 factorial
-        # And if we end up using multiple decks, the problem is compounded, keeping the same
-        # subset length within the new bigger set of permutations
-        # Python is using a 32bit state Mersenne Twister, a far cry from 226bits.
-        # There's probably a library for a 256bit one, I have not looked too hard.
-        # maybe it's enough. Also... Maybe we don't care
-
         # Note (Dylan): Numpy Random Shuffle, shuffles the array contents in place.
         np.random.shuffle(self.deck)
 
