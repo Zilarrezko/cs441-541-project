@@ -55,6 +55,8 @@ def play_poker(state: GameState, strategy: int, printing: bool):
         last_raise = -1
         while betting:
             betting = False
+            if in_play == 1:
+                    break
             for player in state.players:
                 if in_play == 1:
                     break
