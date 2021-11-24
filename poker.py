@@ -36,21 +36,20 @@ def poker_end(state: GameState, winner: int):
 def play_poker(state: GameState, strategy: int, printing: bool):
     poker_init(state)
     state.dealer = 0
-    # Todo(jesse): Big blind/small blind? Other Poker things?
-    # for i in range(len(state.players)):
-    # 	print("player", i, ":", card_print(state.players[i]))
+    # Todo(jesse): Big blind/small blind? Other Poker things?\
 
     highest_bet = 0
     in_play = len(state.players)
     for turn in range(4):
-        print(
-            ">> Turn",
-            turn,
-            "pot:",
-            state.pot,
-            "community:",
-            [str(card) for card in state.community_cards],
-        )
+        if printing:
+            print(
+                ">> Turn",
+                turn,
+                "pot:",
+                state.pot,
+                "community:",
+                [str(card) for card in state.community_cards],
+            )
         betting = True
         last_raise = -1
         while betting:
@@ -83,17 +82,17 @@ def play_poker(state: GameState, strategy: int, printing: bool):
                         player.remove_money(stake)
                         player.set_bet(highest_bet + stake)
                         highest_bet = player.bet
-                        print("new highest bet:", highest_bet)
                         last_raise = player
 
-                if action == PokerAction.fold:
-                    print(f"{player}, folded")
-                    if in_play == 1:
-                        break
-                elif action == PokerAction.call:
-                    print(f"{player}, called bet: {player.bet}")
-                elif action == PokerAction.raising:
-                    print(f"{player}, raised: {stake}, bet: {player.bet}")
+                if printing:
+                    if action == PokerAction.fold:
+                        print(f"{player}, folded")
+                    elif action == PokerAction.call:
+                        print(f"{player}, called bet: {player.bet}")
+                    elif action == PokerAction.raising:
+                        print(f"{player}, raised: {stake}, bet: {player.bet}")
+                if in_play == 1:
+                    break
 
         if in_play == 1:
                 break
@@ -103,6 +102,8 @@ def play_poker(state: GameState, strategy: int, printing: bool):
         elif turn < 3:
             state.community_cards.append(state.deck.pop())
     winner = poker_assess_players(state, printing)
+    if printing:
+        print("Winner is: Player", winner);
     poker_end(state, winner);
 
 
@@ -198,9 +199,10 @@ def poker_assess_players(state: GameState, printing: bool = True) -> int:
         player = state.players[i];
         hand = player.hand
         player_value = poker_hand_value(state, hand)
-        print(
-            f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, {hand_value_strings[player_value]}"
-        )
+        if printing:
+            print(
+                f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, {hand_value_strings[player_value]}"
+            )
         if player_value > best_hand:
             contenders.clear();
             contenders.append(i);
