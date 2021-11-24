@@ -54,12 +54,10 @@ def play_poker(state: GameState, strategy: int, printing: bool):
         betting = True
         last_raise = -1
         while betting:
-            betting = False
             if in_play == 1:
                     break
+            betting = False
             for player in state.players:
-                if in_play == 1:
-                    break
                 if player == last_raise:
                     break
                 if player.has_folded:
@@ -90,11 +88,15 @@ def play_poker(state: GameState, strategy: int, printing: bool):
 
                 if action == PokerAction.fold:
                     print(f"{player}, folded")
+                    if in_play == 1:
+                        break
                 elif action == PokerAction.call:
                     print(f"{player}, called bet: {player.bet}")
                 elif action == PokerAction.raising:
                     print(f"{player}, raised: {stake}, bet: {player.bet}")
 
+        if in_play == 1:
+                break
         if turn == 0:
             for i in range(3):
                 state.community_cards.append(state.deck.pop())
@@ -189,7 +191,7 @@ def poker_hand_value(state: GameState, hand: List[Card]) -> int:
 
 # Todo(jesse): Finish this
 def poker_assess_players(state: GameState, printing: bool = True) -> int:
-    contenders = [int];
+    contenders = [];
     best_player = 0;
     best_hand = 0
     for i in range(len(state.players)):
