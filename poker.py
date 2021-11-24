@@ -23,9 +23,16 @@ def poker_init(state: GameState):
     for i in range(state.player_count * 2):
         state.draw_card(i % state.player_count)
 
-def poker_end(state: GameState, winner: int):
-    # Give money to the player.
-    state.players[winner].add_money(state.pot)
+def poker_end(state: GameState, winners: List[int]):
+    # Give money to the winners.
+    if len(winners) > 1:
+        # Note(jesse): Do we care about truncation?
+        # I'm learning towards no.
+        take = state.pot//len(winners);
+        for i in winners:
+            state.players[i].add_money(take);
+    else:
+        state.players[winners[0]].add_money(state.pot);
     for player in state.players:
         # Add player's cards back into the deck
         state.append_cards(player.hand);
@@ -36,7 +43,7 @@ def poker_end(state: GameState, winner: int):
 def play_poker(state: GameState, strategy: int, printing: bool):
     poker_init(state)
     state.dealer = 0
-    # Todo(jesse): Big blind/small blind? Other Poker things?\
+    # Todo(jesse): Big blind/small blind? Other Poker things?
 
     highest_bet = 0
     in_play = len(state.players)
@@ -102,9 +109,9 @@ def play_poker(state: GameState, strategy: int, printing: bool):
         elif turn < 3:
             state.community_cards.append(state.deck.pop())
     winner = poker_assess_players(state, printing)
-    if printing:
-        print("Winner is: Player", winner);
     poker_end(state, winner);
+    if printing:
+        print("");
 
 
 # Note(jesse):
@@ -191,9 +198,10 @@ def poker_hand_value(state: GameState, hand: List[Card]) -> int:
 
 
 # Todo(jesse): Finish this
-def poker_assess_players(state: GameState, printing: bool = True) -> int:
+def poker_assess_players(state: GameState, printing: bool = True) -> List[int]:
     contenders = [];
     best_player = 0;
+    winners = [];
     best_hand = 0
     for i in range(len(state.players)):
         player = state.players[i];
@@ -203,6 +211,8 @@ def poker_assess_players(state: GameState, printing: bool = True) -> int:
             print(
                 f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, {hand_value_strings[player_value]}"
             )
+        if player.has_folded:
+            continue;
         if player_value > best_hand:
             contenders.clear();
             contenders.append(i);
@@ -210,19 +220,54 @@ def poker_assess_players(state: GameState, printing: bool = True) -> int:
             best_hand = player_value
         elif player_value == best_hand:
             contenders.append(i);
-    best_high = 0;
+    best = 0;
+    equals = [];
     for i in contenders:
         player = state.players[i];
-        hand_score = 0;
+        max_card = 0;
         for card in player.hand:
             if card.value == 1:
-                hand_score += 14;
+                max_card = max(max_card, 14);
             else:
-                hand_score += card.value;
-        if best_high < hand_score:
-            best_high = hand_score;
+                max_card = max(max_card, card.value);
+        if best < max_card:
+            best = max_card;
             best_player = i;
-    return best_player;
+            equals.clear();
+            equals.append(i);
+        elif best == max_card:
+            equals.append(i);
+    if len(equals) > 1:
+        best = 0;
+        for i in equals:
+            min_card = 15;
+            player = state.players[i];
+            for card in player.hand:
+                if card.value == 1:
+                    min_card = min(14, min_card);
+                else:
+                    min_card = min(card.value, min_card);
+            if best < min_card:
+                best = min_card;
+                best_player = i;
+                contenders.clear();
+                contenders.append(i);
+            elif best == min_card:
+                contenders.append(i);
+        if printing:
+            if len(contenders) > 1:
+                print("Draw between:");
+                for i in contenders:
+                    winners.append(i);
+                    print("Player:", i);
+            else:
+                winners.append(best_player);
+                print("Winner is: Player", best_player);
+    else:
+        winners.append(best_player);
+        if printing:
+            print("Winner is: Player", best_player);
+    return winners;
 
 
 def get_poker_action(
