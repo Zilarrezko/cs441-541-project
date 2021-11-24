@@ -127,33 +127,23 @@ hand_value_strings = [
 ]
 
 
-def poker_hand_value(state: GameState, hand: List[Card]) -> tuple[int, int]:
-    # Todo(Jesse): There's a lot of problems here... Lots of edge cases
-    #              Even if, there's a lot of things we can't do here
+def poker_hand_value(state: GameState, hand: List[Card]) -> int:
     value = 0
-    highest = 0
-    suits = [0] * 4
-    cards = [0] * 13
+    suits = [0]*4
+    cards = [0]*13
     for card in hand:
         val = card.value
-        highest = max(val, highest)
-        if val == 1:
-            highest = 14
         suits[card.suit] += 1
         cards[val - 1] += 1
 
     for card in state.community_cards:
         val = card.value
-        # highest = max(val, highest)
-        # if val == 1:
-        # 	highest = 13
         suits[card.suit] += 1
         cards[val - 1] += 1
 
     highest_suit = 0
     for i in range(4):
         highest_suit = max(highest_suit, suits[i])
-    print("highest suit:", highest_suit)
 
     run = 0
     run_end = 0
@@ -192,26 +182,40 @@ def poker_hand_value(state: GameState, hand: List[Card]) -> tuple[int, int]:
     if highest_suit >= 5 and run >= 5 and run_end == 14:
         value = 9
 
-    return value, highest
+    return value
 
 
 # Todo(jesse): Finish this
 def poker_assess_players(state: GameState, printing: bool = True) -> int:
+    contenders = [int];
     best_player = 0;
     best_hand = 0
-    best_high = 0
     for i in range(len(state.players)):
         player = state.players[i];
         hand = player.hand
-        player_value, high = poker_hand_value(state, hand)
+        player_value = poker_hand_value(state, hand)
         print(
-            f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, high: {high}, {hand_value_strings[player_value]}"
+            f"{player} with {[str(card) for card in player.hand]}, with value:{player_value}, {hand_value_strings[player_value]}"
         )
         if player_value > best_hand:
+            contenders.clear();
+            contenders.append(i);
             best_player = i
             best_hand = player_value
-            best_high = high
-        # elif player_value == best_hand && high >
+        elif player_value == best_hand:
+            contenders.append(i);
+    best_high = 0;
+    for i in contenders:
+        player = state.players[i];
+        hand_score = 0;
+        for card in player.hand:
+            if card.value == 1:
+                hand_score += 14;
+            else:
+                hand_score += card.value;
+        if best_high < hand_score:
+            best_high = hand_score;
+            best_player = i;
     return best_player;
 
 

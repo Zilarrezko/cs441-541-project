@@ -11,7 +11,7 @@ from poker import play_poker, PokerStrategy
 if __name__ == "__main__":
     # Initialize a new game state with 1 deck, and 2 players
     state = GameState(1, 2)
-    trials = 10
+    trials = 1
     for i in range(trials):
         # play_blackjack(state, BlackjackStrategy.random, False);
         play_poker(state, PokerStrategy.random, True)
