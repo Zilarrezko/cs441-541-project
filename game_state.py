@@ -19,6 +19,7 @@ class GameState:
         # Note(jesse): Poker Specific
         self._community_cards = []
         self._pool = 0
+        self._pot = 0
 
     @property
     def win_count(self):
@@ -54,7 +55,7 @@ class GameState:
 
     @pot.setter
     def pot(self, value):
-        self._pot += value
+        self._pot = value
 
     @property
     def players_in_play(self):
