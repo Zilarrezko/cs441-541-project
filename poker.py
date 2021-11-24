@@ -69,7 +69,7 @@ def play_poker(state: GameState, strategy: int, printing: bool):
 
                 action, stake = get_poker_action(state, player, strategy)
                 if action == PokerAction.fold:
-                    player.set_folded = True
+                    player.set_folded(True)
                     in_play -= 1
 
                 elif action == PokerAction.call:

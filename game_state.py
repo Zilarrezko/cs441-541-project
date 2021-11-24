@@ -52,6 +52,10 @@ class GameState:
     def pot(self):
         return self._pot
 
+    @pot.setter
+    def pot(self, value):
+        self._pot += value
+
     @property
     def players_in_play(self):
         return sum(1 for player in self.players if not player.has_folded)
