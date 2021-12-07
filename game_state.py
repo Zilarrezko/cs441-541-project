@@ -10,7 +10,7 @@ class GameState:
     def __init__(self, deck_count: int, player_count: int):
         card_count = deck_count * 52
         self._deck_count = deck_count
-        self._deck = [Card(j + 1, j // 13) for i in range(deck_count) for j in range(52)]
+        self._deck = [Card(j % 13 + 1, j // 13) for i in range(deck_count) for j in range(52)]
         self._players = [Player(i, 100) for i in range(player_count)]
         self._player_count = player_count
         self._dealer = 0

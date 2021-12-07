@@ -3,6 +3,7 @@
 # 21 Nov 2021
 from game_state import GameState
 from poker import play_poker, PokerStrategy
+from blackjack import blackjack_train_agent, blackjack_test_agent
 
 
 # import cProfile
@@ -10,19 +11,7 @@ from poker import play_poker, PokerStrategy
 
 if __name__ == "__main__":
     # Initialize a new game state with 1 deck, and 2 players
-    state = GameState(1, 4)
-    trials = 10
-    for i in range(trials):
-        # play_blackjack(state, BlackjackStrategy.random, False);
-        play_poker(state, PokerStrategy.random, True)
-        if i % 512 == 0:
-            print("\r", i, end="")
-    print("\r", end="")
-    # print(
-    #    "Player wins:",
-    #    state.win_count,
-    #    "/",
-    #    trials,
-    #    "...",
-    #    str(100.0 * state.win_count / trials) + "%",
-    # )
+    state = GameState(1, 2)
+    trials = 10000
+    agent = blackjack_train_agent(state, trials, 0.1, 0.2, 0.9, False);
+    blackjack_test_agent(state, agent, trials, False);
