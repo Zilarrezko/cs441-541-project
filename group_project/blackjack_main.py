@@ -12,7 +12,7 @@ def choose_action(state, Q, E):
         Q[state] = action_values
 
     if random.random() <= E:
-        return np.random.choice(ACTIONS)
+        return np.random.choice([0, 1])
 
     return np.argmax(action_values)
 
@@ -70,7 +70,6 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
 
 
 def run_blackjack(episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
-    ACTIONS = [0, 1]
     # STAY, HIT
     rewards = []
     for ep in range(episodes):
@@ -136,6 +135,7 @@ def test_blackjack(episodes, Q, max_steps, epsilon):
                 if reward == 0:
                     draws += 1
                 break
+
     print(f"Wins: {wins}\nDraws: {draws}")
     print(f"Win rate: {wins/episodes}")
 
