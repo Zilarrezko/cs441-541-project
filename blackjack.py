@@ -115,7 +115,6 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 	data = [];
 	for episode in range(episodes):
 		blackjack_init(game_state);
-		episode_reward = 0;
 		while True:
 			state = blackjack_get_state(game_state, 1);
 			action = 0;
@@ -124,7 +123,7 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 			else:
 				action = randint(0, BlackjackAction.count - 1);
 			reward = blackjack_take_action(game_state, action);
-			episode_reward += reward;
+			reward_total += reward;
 			q_index = state*2 + action;
 			state_prime = blackjack_get_state(game_state, 1);
 			max_action_prime = blackjack_get_max_action(agent, state_prime);
@@ -132,7 +131,6 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 			agent.q[q_index] = agent.q[q_index] + eta*(reward + gamma*agent.q[q_index_prime] - agent.q[q_index]);
 			if blackjack_hand_value(game_state.players[1]) > 21 or action == BlackjackAction.stand:
 				break;
-		reward_total += episode_reward;
 		data.append(reward_total/(episode + 1)); # reward
 		data.append(game_state.win_count/(episode + 1)*100); # winrate
 		if episode > 0 and episode%50 == 0:
@@ -158,15 +156,13 @@ def blackjack_test_agent(game_state, agent, episodes, printing):
 	data = [];
 	for episode in range(episodes):
 		blackjack_init(game_state);
-		episode_reward = 0;
 		while True:
 			state = blackjack_get_state(game_state, 1);
 			action = blackjack_get_max_action(agent, state);
 			reward = blackjack_take_action(game_state, action);
-			episode_reward += reward;
+			reward_total += reward;
 			if blackjack_hand_value(game_state.players[1]) > 21 or action == BlackjackAction.stand:
 				break;
-		reward_total += episode_reward;
 		data.append(reward_total/(episode + 1)); # reward
 		data.append(game_state.win_count/(episode + 1)*100); # winrate
 		blackjack_end(game_state);
