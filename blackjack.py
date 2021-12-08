@@ -75,7 +75,6 @@ REWARD_WIN  = 1;
 REWARD_PUSH = 0;
 REWARD_TAX  = 0;
 def blackjack_take_action(game_state, action):
-	global g_wins;
 	reward = 0;
 	if action == BlackjackAction.hit:
 		game_state.draw_card(1);
