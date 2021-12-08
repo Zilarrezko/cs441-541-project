@@ -10,20 +10,25 @@ class GameState:
     def __init__(self, deck_count: int, player_count: int):
         card_count = deck_count * 52
         self._deck_count = deck_count
-        self._deck = [Card(j + 1, j // 13) for i in range(deck_count) for j in range(52)]
-        self._players = [Player(i, 100) for i in range(player_count)]
+        self._deck = [Card(j % 13 + 1, j // 13) for i in range(deck_count) for j in range(52)]
+        self._players = [Player(i) for i in range(player_count)]
         self._player_count = player_count
         self._dealer = 0
         self._win_count = 0
-        # Note(jesse): Blackjack specific
-        # Note(jesse): Poker Specific
-        self._community_cards = []
-        self._pool = 0
-        self._pot = 0
+        self._draw_count = 0;
+        self._loss_count = 0;
 
     @property
     def win_count(self):
         return self._win_count
+
+    @property
+    def draw_count(self):
+        return self._draw_count
+
+    @property
+    def loss_count(self):
+        return self._loss_count
 
     @property
     def deck(self):
@@ -41,25 +46,14 @@ class GameState:
     def deck_count(self):
         return self._deck_count
 
-    @property
-    def community_cards(self):
-        return self._community_cards
+    def inc_win(self):
+        self._win_count += 1;
 
-    @property
-    def folded_players(self):
-        return [player for player in self.players if player.has_folded]
+    def inc_draw(self):
+        self._draw_count += 1;
 
-    @property
-    def pot(self):
-        return self._pot
-
-    @pot.setter
-    def pot(self, value):
-        self._pot = value
-
-    @property
-    def players_in_play(self):
-        return sum(1 for player in self.players if not player.has_folded)
+    def inc_loss(self):
+        self._loss_count += 1;
 
     def reset(self):
         # Reset the deck and shuffle
@@ -67,17 +61,9 @@ class GameState:
             Card(j % 13 + 1, j // 13) for i in range(self.deck_count) for j in range(52)
         ]
         self.shuffle_deck()
-
-        # Set all players to have $100, and unfold
-        for player in self.players:
-            player.set_money(100)
-            player.set_folded(False)
-
-        # Clear public cards & Folder players
-        self._community_cards.clear()
-
-        # Set the pot to 0.
-        self._pot = 0
+        self._win_count = 0;
+        self._draw_count = 0;
+        self._loss_count = 0;
 
     def shuffle_deck(self):
         # Note (Dylan): Numpy Random Shuffle, shuffles the array contents in place.
@@ -89,6 +75,3 @@ class GameState:
         """
         card = self._deck.pop()
         self._players[player].add_card(card)
-
-    def append_cards(self, cards: List[Card]):
-        self._deck += cards;
