@@ -119,7 +119,6 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
     for ep in range(num_episodes):
         deck = Deck()
         deck.shuffle()
-        mean_reward = 0
         c1, c2, d1, d2 = deck.deal()
         hand = [c1, c2]
         dealer_hand = [d1, d2]
@@ -131,11 +130,6 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
             action = choose_action(state, Q, epsilon)
             new_state, reward = perform_action(action, state, hand, dealer_hand, deck)
             states.append((state, action, reward))
-            Qo = Q.get(state, [0, 0])[action]
-            Qn = np.max(Q.get(new_state, [0, 0]))
-
-            Q[state][action] = Qo + alpha * (reward + gamma * Qn - Qo)
-            mean_reward += reward
 
             # This means we reached a terminal state. and Episode should end.
             if state == new_state:
@@ -145,21 +139,25 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
         # analyze it based on first visit MC algorithm
         seen = []
         for i in range(len(states)):
-            state, action, reward = states[i]
+            state, action, _ = states[i]
 
             pair = (state, action)
             if pair in seen:
                 continue
 
             seen.append(pair)
+            # Get the total return starting from this state until terminal state
+            # Where Total Return = Rt + Rt+1 * G + Rt+2 * G^1 + ...
             G = sum(x[2] * gamma ** t for t, x in enumerate(states[i:]))
             tr = total_return.get(pair, 0)
-            tr += G
             nv = num_visits.get(pair, 0)
+            tr += G
             nv += 1
-
+            # Update the values with +1 occurrence and +G
             total_return[pair] = tr
             num_visits[pair] = nv
+
+            # Update the Q table.
             Q[state][action] = tr / nv
 
 
