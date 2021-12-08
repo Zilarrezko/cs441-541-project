@@ -74,7 +74,6 @@ REWARD_BUST = -5;
 REWARD_WIN  = 1;
 REWARD_PUSH = 0;
 REWARD_TAX  = 0;
-g_wins = 0
 def blackjack_take_action(game_state, action):
 	global g_wins;
 	reward = 0;
@@ -92,19 +91,20 @@ def blackjack_take_action(game_state, action):
 		player_value = blackjack_hand_value(game_state.players[1]);
 		if dealer_value < player_value or dealer_value > 21:
 			reward = REWARD_WIN;
-			g_wins += 1;
+			game_state.inc_win();
 		elif dealer_value > player_value:
 			reward = REWARD_LOSE;
+			game_state.inc_loss();
 		elif dealer_value == player_value:
 			reward = REWARD_PUSH;
+			game_state.inc_draw();
 	return reward + REWARD_TAX;
 
 action_string = ["hit", "stand"];
 
 def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
-	global g_wins;
-	g_wins = 0;
 	print("Training:");
+	game_state.reset();
 	agent = Agent();
 	# Note(jesse): 27 if from the -4, since a player's lowest hand value is 4 and highest
 	#              is 31 (having 21 and hitting, will result in maximum 31)
@@ -135,13 +135,13 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 				break;
 		reward_total += episode_reward;
 		data.append(reward_total/(episode + 1)); # reward
-		data.append(g_wins/(episode + 1)*100); # winrate
+		data.append(game_state.win_count/(episode + 1)*100); # winrate
 		if episode > 0 and episode%50 == 0:
 			e -= de;
 			# e += -e*0.06 # Note(jesse): Hard coded for now, will do linear recurrence later
 		blackjack_end(game_state);
-	print("wins:", g_wins);
-	print("winrate:", g_wins/episodes*100);
+	print("wins:", game_state.win_count);
+	print("winrate:", game_state.win_count/episodes*100);
 	f = open("training.csv", "w");
 	string = "";
 	for i in range(0, len(data) - 1, 2):
@@ -153,9 +153,8 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 	return agent;
 
 def blackjack_test_agent(game_state, agent, episodes, printing):
-	global g_wins;
-	g_wins = 0;
 	print("Testing:");
+	game_state.reset();
 	reward_total = 0;
 	data = [];
 	for episode in range(episodes):
@@ -170,10 +169,10 @@ def blackjack_test_agent(game_state, agent, episodes, printing):
 				break;
 		reward_total += episode_reward;
 		data.append(reward_total/(episode + 1)); # reward
-		data.append(g_wins/(episode + 1)*100); # winrate
+		data.append(game_state.win_count/(episode + 1)*100); # winrate
 		blackjack_end(game_state);
-	print("wins:", g_wins);
-	print("winrate:", g_wins/episodes*100);
+	print("wins:", game_state.win_count);
+	print("winrate:", game_state.win_count/episodes*100);
 	f = open("test.csv", "w");
 	string = "";
 	for i in range(0, len(data) - 1, 2):

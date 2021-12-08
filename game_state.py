@@ -15,10 +15,20 @@ class GameState:
         self._player_count = player_count
         self._dealer = 0
         self._win_count = 0
+        self._draw_count = 0;
+        self._loss_count = 0;
 
     @property
     def win_count(self):
         return self._win_count
+
+    @property
+    def draw_count(self):
+        return self._draw_count
+
+    @property
+    def loss_count(self):
+        return self._loss_count
 
     @property
     def deck(self):
@@ -36,12 +46,24 @@ class GameState:
     def deck_count(self):
         return self._deck_count
 
+    def inc_win(self):
+        self._win_count += 1;
+
+    def inc_draw(self):
+        self._draw_count += 1;
+
+    def inc_loss(self):
+        self._loss_count += 1;
+
     def reset(self):
         # Reset the deck and shuffle
         self._deck = [
             Card(j % 13 + 1, j // 13) for i in range(self.deck_count) for j in range(52)
         ]
         self.shuffle_deck()
+        self._win_count = 0;
+        self._draw_count = 0;
+        self._loss_count = 0;
 
     def shuffle_deck(self):
         # Note (Dylan): Numpy Random Shuffle, shuffles the array contents in place.
