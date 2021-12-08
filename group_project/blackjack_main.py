@@ -69,10 +69,10 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
         return new_s, 0
 
 
-def run_blackjack(episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
+def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
     # STAY, HIT
     rewards = []
-    for ep in range(episodes):
+    for ep in range(num_episodes):
         deck = Deck()
         deck.shuffle()
         mean_reward = 0
@@ -109,6 +109,58 @@ def run_blackjack(episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
 
     plot(rewards)
     savefig("graph.png")
+
+
+def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
+    # STAY, HIT
+
+    num_visits = {}
+    total_return = {}
+    for ep in range(num_episodes):
+        deck = Deck()
+        deck.shuffle()
+        mean_reward = 0
+        c1, c2, d1, d2 = deck.deal()
+        hand = [c1, c2]
+        dealer_hand = [d1, d2]
+        states = []
+        for step in range(max_steps):
+
+            state = State(sum(c.value for c in hand), d1.value)
+
+            action = choose_action(state, Q, epsilon)
+            new_state, reward = perform_action(action, state, hand, dealer_hand, deck)
+            states.append((state, action, reward))
+            Qo = Q.get(state, [0, 0])[action]
+            Qn = np.max(Q.get(new_state, [0, 0]))
+
+            Q[state][action] = Qo + alpha * (reward + gamma * Qn - Qo)
+            mean_reward += reward
+
+            # This means we reached a terminal state. and Episode should end.
+            if state == new_state:
+                break
+
+        # We have finished an episode
+        # analyze it based on first visit MC algorithm
+        seen = []
+        for i in range(len(states)):
+            state, action, reward = states[i]
+
+            pair = (state, action)
+            if pair in seen:
+                continue
+
+            seen.append(pair)
+            G = sum(x[2] * gamma ** t for t, x in enumerate(states[i:]))
+            tr = total_return.get(pair, 0)
+            tr += G
+            nv = num_visits.get(pair, 0)
+            nv += 1
+
+            total_return[pair] = tr
+            num_visits[pair] = nv
+            Q[state][action] = tr / nv
 
 
 def test_blackjack(episodes, Q, max_steps, epsilon):
@@ -148,5 +200,6 @@ if __name__ == "__main__":
     E = 0.35
     G = 0.6
     DELTA_E = (-100 * E) / (E / (0.65 * N))
-    run_blackjack(N, Q, 20, A, G, E, DELTA_E)
+    # run_q_learning(N, Q, 20, A, G, E, DELTA_E)
+    run_mc(N, Q, 20, A, G, E, DELTA_E)
     test_blackjack(N, Q, 20, 0)
