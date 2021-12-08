@@ -17,9 +17,48 @@ def choose_action(state, Q, E):
     return np.argmax(action_values)
 
 
+def eval_hand(hand: list):
+    total_value = 0
+    num_aces = 0
+
+    for card in hand:
+        if card.value == 1:
+            num_aces += 1
+            continue
+        total_value += min(card.value, 10)
+    while num_aces > 0:
+
+        if total_value + 11 > 21:
+            total_value += 1
+        else:
+            total_value += 11
+        num_aces -= 1
+    return total_value
+
+
 def dealer_sim(hand, deck):
     total_value = hand[0].value + hand[1].value
-    while total_value < 16:
+    used_ace = False
+    if hand[0].value == 1:
+        used_ace = True
+        if total_value + 10 <= 21:
+            total_value += 10
+
+    if hand[1].value == 1 and not used_ace:
+        used_ace = True
+        if total_value + 10 <= 21:
+            total_value += 10
+
+    while total_value < 17:
+        card = deck.draw()
+
+        if not used_ace and card.value == 1:
+            used_ace = True
+            if total_value + 11 <= 21:
+                total_value += 11
+            else:
+                total_value += 1
+            continue
         total_value += deck.draw().value
 
     if total_value > 21:
@@ -33,7 +72,7 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
     # STAY
     if action == 0:
         dealer_value = dealer_sim(dealer_hand, deck)
-        hand_value = state.hand
+        hand_value = eval_hand(hand)
 
         # Dealer busted
         if dealer_value == -1:
@@ -59,7 +98,7 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
     # HIT
     elif action == 1:
         hand.append(deck.draw())
-        new_hand_value = sum(c.value for c in hand)
+        new_hand_value = eval_hand(hand)
         new_s = State(new_hand_value, state.dealer)
 
         # Busted
@@ -198,6 +237,6 @@ if __name__ == "__main__":
     E = 0.35
     G = 0.6
     DELTA_E = (-100 * E) / (E / (0.65 * N))
-    # run_q_learning(N, Q, 20, A, G, E, DELTA_E)
-    run_mc(N, Q, 20, A, G, E, DELTA_E)
+    run_q_learning(N, Q, 20, A, G, E, DELTA_E)
+    # run_mc(N, Q, 20, A, G, E, DELTA_E)
     test_blackjack(N, Q, 20, 0)
