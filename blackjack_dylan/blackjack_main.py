@@ -232,7 +232,7 @@ def test_blackjack(episodes, Q, max_steps, epsilon):
 if __name__ == "__main__":
     Q = {}
     E = 0
-    N = 10000000
+    N = 100000
     A = 0.125
     E = 0.35
     G = 0.6
