@@ -129,16 +129,27 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 			max_action_prime = blackjack_get_max_action(agent, state_prime);
 			q_index_prime = state_prime*2 + max_action_prime;
 			agent.q[q_index] = agent.q[q_index] + eta*(reward + gamma*agent.q[q_index_prime] - agent.q[q_index]);
+
+            # Log data
+            data.append({
+                'num_trials': episodes,
+                'epsilon': epsilon,
+                'eta': eta,
+                'gamma': gamma,
+                'trial': episode,
+                'reward': reward_total/(episode + 1),
+                'winrate': game_state.win_count/(episode + 1)*100
+            })
 			if blackjack_hand_value(game_state.players[1]) > 21 or action == BlackjackAction.stand:
 				break;
-		data.append(reward_total/(episode + 1)); # reward
-		data.append(game_state.win_count/(episode + 1)*100); # winrate
 		if episode > 0 and episode%50 == 0:
 			e -= de;
 			# e += -e*0.06 # Note(jesse): Hard coded for now, will do linear recurrence later
 		blackjack_end(game_state);
+
 	print("wins:", game_state.win_count);
 	print("winrate:", game_state.win_count/episodes*100);
+    '''
 	f = open("training.csv", "w");
 	string = "";
 	for i in range(0, len(data) - 1, 2):
@@ -147,7 +158,8 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing):
 		string += str(data[i + 1]);
 		string += "\n";
 	f.write(string);
-	return agent;
+    '''
+	return agent, data;
 
 def blackjack_test_agent(game_state, agent, episodes, printing):
 	print("Testing:");
