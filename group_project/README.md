@@ -1,2 +1,2 @@
 # CS-441/541 Final Project
-Reinforced Learning with card games
+Reinforced Learning with blackjack
