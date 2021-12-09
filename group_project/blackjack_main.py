@@ -37,7 +37,7 @@ def eval_hand(hand: list):
 
 
 def dealer_sim(hand, deck):
-    total_value = hand[0].value + hand[1].value
+    total_value = min(hand[0].value, 10) + min(hand[1].value, 10)
     used_ace = False
     if hand[0].value == 1:
         used_ace = True
@@ -59,10 +59,7 @@ def dealer_sim(hand, deck):
             else:
                 total_value += 1
             continue
-        total_value += deck.draw().value
-
-    if total_value > 21:
-        total_value = -1
+        total_value += min(card.value, 10)
 
     return total_value
 
@@ -75,26 +72,29 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
         hand_value = eval_hand(hand)
 
         # Dealer busted
-        if dealer_value == -1:
+        if dealer_value > 21:
             return state, 1
 
-        # Draw
+        # We Busted (shouldnt ever happen, is captured elsewhere)
+        if hand_value > 21:
+            return state, -2
+
+        # We draw
         if hand_value == dealer_value:
             return state, 0
 
-        # Perfect hand
+        # We have perfect hand
         if hand_value == 21:
             return state, 2
 
         # We beat the the dealer without either of us busting
         if hand_value > dealer_value and hand_value <= 21:
             return state, 1
+
         # Lost to dealer without either of us busting
         if hand_value < dealer_value:
             return state, -1
-        # Busted
-        if hand_value > 21:
-            return state, -2
+
     # HIT
     elif action == 1:
         hand.append(deck.draw())
@@ -120,7 +120,7 @@ def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
         dealer_hand = [d1, d2]
         for step in range(max_steps):
 
-            state = State(sum(c.value for c in hand), d1.value)
+            state = State(eval_hand(hand), d1.value)
 
             action = choose_action(state, Q, epsilon)
             new_state, reward = perform_action(action, state, hand, dealer_hand, deck)
@@ -139,15 +139,15 @@ def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
             epsilon += delta_e
 
             # Calculate average reward thus far and plot it.
-            if len(rewards) == 0:
-                rewards.append(mean_reward)
-            else:
-                last = rewards[-1]
-                mr = (mean_reward - last) / (len(rewards) + 1)
-                rewards.append(last + mr)
+            # if len(rewards) == 0:
+            #    rewards.append(mean_reward)
+            # else:
+            #    last = rewards[-1]
+            #    mr = (mean_reward - last) / (len(rewards) + 1)
+            #    rewards.append(last + mr)
 
-    plot(rewards)
-    savefig("graph.png")
+    # plot(rewards)
+    # savefig("graph.png")
 
 
 def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
@@ -212,7 +212,7 @@ def test_blackjack(episodes, Q, max_steps, epsilon):
         dealer_hand = [d1, d2]
         for step in range(max_steps):
 
-            state = State(sum(c.value for c in hand), d1.value)
+            state = State(eval_hand(hand), d1.value)
 
             action = choose_action(state, Q, epsilon)
             new_state, reward = perform_action(action, state, hand, dealer_hand, deck)
@@ -232,7 +232,7 @@ def test_blackjack(episodes, Q, max_steps, epsilon):
 if __name__ == "__main__":
     Q = {}
     E = 0
-    N = 10000
+    N = 10000000
     A = 0.125
     E = 0.35
     G = 0.6
