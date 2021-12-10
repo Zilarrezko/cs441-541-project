@@ -2,7 +2,7 @@ import numpy as np
 import random
 from state import State
 from deck import Deck
-from matplotlib.pyplot import plot, savefig
+from matplotlib.pyplot import legend, plot, savefig
 
 
 def choose_action(state, Q, E):
@@ -110,13 +110,18 @@ def perform_action(action, state, hand, dealer_hand, deck: Deck):
 
 def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
     # STAY, HIT
-    rewards = []
+    wrs = []
+    lrs = []
+    drs = []
+    wins = 0
+    draws = 0
     for ep in range(num_episodes):
         deck = Deck()
         deck.shuffle()
         mean_reward = 0
         c1, c2, d1, d2 = deck.deal()
         hand = [c1, c2]
+
         dealer_hand = [d1, d2]
         for step in range(max_steps):
 
@@ -133,7 +138,19 @@ def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
 
             # This means we reached a terminal state. and Episode should end.
             if state == new_state:
+                if reward > 0:
+                    wins += 1
+                elif reward == 0:
+                    draws += 1
                 break
+
+        div = ep + 1
+        cur_wr = wins / div
+        cur_dr = draws / div
+        cur_lr = (div - wins - draws) / div
+        wrs.append(cur_wr)
+        drs.append(cur_dr)
+        lrs.append(cur_lr)
 
         if ep % 100 == 0:
             epsilon += delta_e
@@ -146,8 +163,17 @@ def run_q_learning(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
             #    mr = (mean_reward - last) / (len(rewards) + 1)
             #    rewards.append(last + mr)
 
-    # plot(rewards)
-    # savefig("graph.png")
+    plot(wrs, label="Win Rate")
+    plot(drs, label="Draw Rate")
+    plot(lrs, label="Loss Rate")
+    legend()
+    savefig("training_rates_q_learning_graph.png")
+
+    with open("training_rates_q_learning.csv", "w") as file:
+        file.write("WR, DR, LR\n")
+
+        for i in range(len(wrs)):
+            file.write(f"{wrs[i]},{drs[i]},{lrs[i]}\n")
 
 
 def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
@@ -155,6 +181,11 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
 
     num_visits = {}
     total_return = {}
+    wrs = []
+    lrs = []
+    drs = []
+    wins = 0
+    draws = 0
     for ep in range(num_episodes):
         deck = Deck()
         deck.shuffle()
@@ -172,7 +203,19 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
 
             # This means we reached a terminal state. and Episode should end.
             if state == new_state:
+                if reward > 0:
+                    wins += 1
+                elif reward == 0:
+                    draws += 1
                 break
+
+        div = ep + 1
+        cur_wr = wins / div
+        cur_dr = draws / div
+        cur_lr = (div - wins - draws) / div
+        wrs.append(cur_wr)
+        drs.append(cur_dr)
+        lrs.append(cur_lr)
 
         # We have finished an episode
         # analyze it based on first visit MC algorithm
@@ -198,6 +241,18 @@ def run_mc(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
 
             # Update the Q table.
             Q[state][action] = tr / nv
+
+    plot(wrs, label="Win Rate")
+    plot(drs, label="Draw Rate")
+    plot(lrs, label="Loss Rate")
+    legend()
+    savefig("training_rates_mc_graph.png")
+
+    with open("training_rates_mc.csv", "w") as file:
+        file.write("WR, DR, LR\n")
+
+        for i in range(len(wrs)):
+            file.write(f"{wrs[i]},{drs[i]},{lrs[i]}\n")
 
 
 def test_blackjack(episodes, Q, max_steps, epsilon):
@@ -232,11 +287,11 @@ def test_blackjack(episodes, Q, max_steps, epsilon):
 if __name__ == "__main__":
     Q = {}
     E = 0
-    N = 100000
+    N = 10000
     A = 0.125
     E = 0.35
     G = 0.6
     DELTA_E = (-100 * E) / (E / (0.65 * N))
-    run_q_learning(N, Q, 20, A, G, E, DELTA_E)
-    # run_mc(N, Q, 20, A, G, E, DELTA_E)
+    # run_q_learning(N, Q, 20, A, G, E, DELTA_E)
+    run_mc(N, Q, 20, A, G, E, DELTA_E)
     test_blackjack(N, Q, 20, 0)
