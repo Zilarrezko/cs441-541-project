@@ -2,6 +2,9 @@ from random import randint, random
 from card import Card
 from game_state import GameState
 from player import Player
+import pandas as pd
+import fcntl
+import os
 
 class BlackjackAction:
     hit   = 0;
@@ -101,7 +104,8 @@ def blackjack_take_action(game_state, action):
 
 action_string = ["hit", "stand"];
 
-def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing=False):
+def blackjack_train_agent(game_state, ndecks, episodes, epsilon, eta, gamma, out_dir='training_results', printing=False):
+    #print("In function")
     if printing == True:
         print("Training:");
     game_state.reset();
@@ -116,6 +120,7 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing=Fa
     data = [];
     for episode in range(episodes):
         blackjack_init(game_state);
+        action_num = 1
         while True:
             state = blackjack_get_state(game_state, 1);
             action = 0;
@@ -132,14 +137,19 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing=Fa
             agent.q[q_index] = agent.q[q_index] + eta*(reward + gamma*agent.q[q_index_prime] - agent.q[q_index]);
 
             data.append({
-                'num_trials': episodes,
+                'num_episodes': episodes,
+                'num_decks': ndecks,
                 'epsilon': epsilon,
                 'eta': eta,
                 'gamma': gamma,
-                'trial': episode,
+                'episode': episode,
+                'action': action,
+                'action_num': action_num,
                 'reward': reward_total/(episode + 1),
+                'wins': game_state.win_count,
                 'winrate': game_state.win_count/(episode + 1)*100
             })
+            action_num += 1
             if blackjack_hand_value(game_state.players[1]) > 21 or action == BlackjackAction.stand:
                 break;
         if episode > 0 and episode%50 == 0:
@@ -150,17 +160,31 @@ def blackjack_train_agent(game_state, episodes, epsilon, eta, gamma, printing=Fa
     if printing == True:
         print("wins:", game_state.win_count);
         print("winrate:", game_state.win_count/episodes*100);
-    '''
-    f = open("training.csv", "w");
-    string = "";
-    for i in range(0, len(data) - 1, 2):
-        string += str(data[i]);
-        string += ",";
-        string += str(data[i + 1]);
-        string += "\n";
-    f.write(string);
-    '''
-    return agent, data;
+    
+    if out_dir is not None:
+        print("Writing data")
+        '''
+        f = open("training.csv", "w");
+        string = "";
+        for i in range(0, len(data) - 1, 2):
+            string += str(data[i]);
+            string += ",";
+            string += str(data[i + 1]);
+            string += "\n";
+        f.write(string);
+        '''        
+        
+        '''
+        with open(out_path, 'a') as fh:
+            fcntl.flock(fh, fcntl.LOCK_EX)
+            pd.DataFrame(data).to_csv(fh, index=False)
+            fcntl.flock(fh, fcntl.LOCK_UN)
+        '''
+        file_name = f"{episodes}_{epsilon}_{eta}_{gamma}".replace('.', '')
+        out_path = os.path.join(out_dir, f"{file_name}.csv")
+        pd.DataFrame(data).to_csv(out_path, index=False)
+    else:
+        return agent, data;
 
 def blackjack_test_agent(game_state, agent, episodes, printing):
     print("Testing:");
@@ -190,9 +214,21 @@ def blackjack_test_agent(game_state, agent, episodes, printing):
         string += "\n";
     f.write(string);
     
-    
+
+'''
 def run_blackjack_exp(ndecks, ntrials, eps, eta, gamma):
     state = GameState(ndecks, 2)
     _, data = blackjack_train_agent(state, ntrials, eps, eta, gamma)
+        
+    return data
+'''
+
+def run_blackjack_exp(ndecks, ntrials, eps, eta, gamma, num_exp):
+    state = GameState(ndecks, 2)
+    _, data = blackjack_train_agent(state, ntrials, eps, eta, gamma)
+    
+    with cnt.get_lock():
+        cnt.value += 1
+        print(f"Progress: {cnt.value + 1} / {num_exp} ({(cnt.value + 1) / num_exp * 100:.2f} %)", end='\r')
         
     return data
