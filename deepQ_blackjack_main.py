@@ -70,7 +70,10 @@ def generate_input(dealer_visible_card, player_cards):
         input[card] += 1
     return input
 
-
+# After a game has been completed, we are left with a "history" of network_states.
+# A batch update must be performed to update the neural network where the reward
+# earned at the final action is passed down through the previous actions and 
+# the network's weights are adjusted according to these rewards.
 def update_network(network: NeuralNetwork, history, alpha, gamma) -> None:
     previous_max_Qvalue = 0
     for i in range(len(history)):
@@ -98,7 +101,7 @@ def run_blackjack(episodes, network: NeuralNetwork, max_steps, alpha, gamma, eps
         dealer_hand = [d1, d2]
         history = []
         for step in range(max_steps):
-            
+
             input = generate_input(d1.value, [c.value for c in hand])
             network_state = network.execute_forward_propagation(input)
 

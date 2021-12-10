@@ -2,7 +2,9 @@ from typing import List
 import copy
 
 
-LEARNING_RATE: float = 0.05
+LEARNING_RATE: float = 0.1
+MOMENTUM_ENABLED: bool = True
+MOMENTUM_VALUE: float = 0.9
 
 
 class NetworkState:
@@ -31,6 +33,16 @@ class NeuralNetwork:
             [[[0 for i in range(hidden_size)] for j in range(hidden_size)] for k in range(hidden_amount - 1)]
 
         self.output_weights: List[List[float]] = \
+            [[0 for i in range(output_size)] for j in range(hidden_size)]
+
+        # Delta weights are used for momentum.
+        self.delta_input_weights: List[List[float]] = \
+            [[0 for i in range(hidden_size)] for j in range(input_size)]
+
+        self.delta_hidden_weights: List[List[List[float]]] = \
+            [[[0 for i in range(hidden_size)] for j in range(hidden_size)] for k in range(hidden_amount - 1)]
+
+        self.delta_output_weights: List[List[float]] = \
             [[0 for i in range(output_size)] for j in range(hidden_size)]
 
 
@@ -66,8 +78,7 @@ class NeuralNetwork:
     def execute_back_progagation(self, network_state: NetworkState, target_output: List[float]) -> None:
         output_error = self.calculate_loss(network_state.output_layer, target_output)
         hidden_errors = [self.calculate_error(network_state.hidden_layers[-1], \
-                                              network_state.output_weights, \
-                                              output_error)]
+                                              network_state.output_weights, output_error)]
         for i in range(1, self.hidden_amount):
             hidden_index = self.hidden_amount - 1 - i
             hidden_errors.append(self.calculate_error(network_state.hidden_layers[hidden_index],\
@@ -75,14 +86,14 @@ class NeuralNetwork:
                                                       hidden_errors[-1]))
 
         # Current weights are updated based on the errors calculated from the weights and layers
-        # saved into network_state during the forward propagation step.
-        self.update_weights(network_state.hidden_layers[-1], self.output_weights, output_error)
+        # that were saved into network_state during the forward propagation step.
+        self.update_weights(network_state.hidden_layers[-1], self.output_weights, \
+                            self.delta_output_weights, output_error)
         for i in range(1, self.hidden_amount):
             hidden_index = self.hidden_amount - 1 - i
-            self.update_weights(network_state.hidden_layers[hidden_index], \
-                                self.hidden_weights[hidden_index], \
-                                hidden_errors[i])
-        self.update_weights(network_state.input_layer, self.input_weights, hidden_errors[0])
+            self.update_weights(network_state.hidden_layers[hidden_index], self.hidden_weights[hidden_index], \
+                                self.delta_hidden_weights[hidden_index], hidden_errors[i])
+        self.update_weights(network_state.input_layer, self.input_weights, self.delta_input_weights, hidden_errors[0])
 
 
     def calculate_loss(self, output: List[float], target_output: List[float]) -> List[float]:
@@ -103,11 +114,15 @@ class NeuralNetwork:
         return new_error
 
 
-    def update_weights(self, layer: List[float], weights: List[List[float]], error: List[float]) -> None:
-        global LEARNING_RATE
+    def update_weights(self, layer: List[float], weights: List[List[float]], delta_weights: List[List[float]], error: List[float]) -> None:
+        global LEARNING_RATE, MOMENTUM_ENABLED, MOMENTUM_VALUE
         for i in range(len(layer)):
             for j in range(len(error)):
-                weights[i][j] += LEARNING_RATE * layer[i] * error[j]
+                new_value = weights[i][j] + (LEARNING_RATE * layer[i] * error[j])
+                if MOMENTUM_ENABLED:
+                    new_value += MOMENTUM_VALUE * delta_weights[i][j]   
+                delta_weights[i][j] = weights[i][j] - new_value
+                weights[i][j] = new_value
 
 
 
