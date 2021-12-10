@@ -2,14 +2,18 @@ from typing import List
 import copy
 
 
-LEARNING_RATE: float = 0.1
+LEARNING_RATE: float = 0.05
 
 
 class NetworkState:
-    def __init__(self, input_layer: List[float], hidden_layer: List[float], output_layer: List[float]) -> None:
-        self.input_layer: List[float] = copy.deepcopy(input_layer)
-        self.hidden_layers: List[List[float]] = copy.deepcopy(hidden_layer)
-        self.output_layer: List[float] = copy.deepcopy(output_layer)
+    def __init__(self) -> None:
+        self.input_layer: List[float] = None
+        self.hidden_layers: List[List[float]] = None
+        self.output_layer: List[float] = None
+
+        self.input_weights: List[List[float]] = None
+        self.hidden_weights: List[List[List[float]]] = None
+        self.output_weights: List[List[float]] = None
 
 
 class NeuralNetwork:
@@ -19,7 +23,7 @@ class NeuralNetwork:
         self.hidden_size: int = hidden_size
         self.output_size: int = output_size
 
-        # initialize weights to value to 0
+        # Initialize weights to 0.
         self.input_weights: List[List[float]] = \
             [[0 for i in range(hidden_size)] for j in range(input_size)]
 
@@ -32,13 +36,21 @@ class NeuralNetwork:
 
     def execute_forward_propagation(self, input: List[float]) -> NetworkState:
         hidden_layers = [self.calculate_next_layer(input, self.input_weights, self.hidden_size)]
-
         for i in range(self.hidden_amount - 1):
             hidden_layers.append(self.calculate_next_layer(hidden_layers[i], self.hidden_weights[i], self.hidden_size))
-
         output_layer = self.calculate_next_layer(hidden_layers[-1], self.output_weights, self.output_size)
 
-        return NetworkState(input, hidden_layers, output_layer)
+        # After forward propagating through the layers, 
+        # the values of the layers and weights are saved into network_state.
+        network_state = NetworkState()
+        network_state.input_layer = copy.deepcopy(input)
+        network_state.hidden_layers = copy.deepcopy(hidden_layers)
+        network_state.output_layer = copy.deepcopy(output_layer)
+        network_state.input_weights = copy.deepcopy(self.input_weights)
+        network_state.hidden_weights = copy.deepcopy(self.hidden_weights)
+        network_state.output_weights = copy.deepcopy(self.output_weights)
+
+        return network_state
 
 
     def calculate_next_layer(self, layer: List[float], weights: List[List[float]], next_layer_size: int) -> List[float]:
@@ -53,21 +65,23 @@ class NeuralNetwork:
 
     def execute_back_progagation(self, network_state: NetworkState, target_output: List[float]) -> None:
         output_error = self.calculate_loss(network_state.output_layer, target_output)
-        hidden_errors = [self.calculate_error(network_state.hidden_layers[-1], 
-                                              self.output_weights, output_error)]
-
+        hidden_errors = [self.calculate_error(network_state.hidden_layers[-1], \
+                                              network_state.output_weights, \
+                                              output_error)]
         for i in range(1, self.hidden_amount):
             hidden_index = self.hidden_amount - 1 - i
-            hidden_errors.append(self.calculate_error(network_state.hidden_layers[hidden_index],
-                                                      self.hidden_weights[hidden_index], hidden_errors[-1]))
+            hidden_errors.append(self.calculate_error(network_state.hidden_layers[hidden_index],\
+                                                      network_state.hidden_weights[hidden_index], \
+                                                      hidden_errors[-1]))
 
+        # Current weights are updated based on the errors calculated from the weights and layers
+        # saved into network_state during the forward propagation step.
         self.update_weights(network_state.hidden_layers[-1], self.output_weights, output_error)
-
         for i in range(1, self.hidden_amount):
             hidden_index = self.hidden_amount - 1 - i
-            self.update_weights(network_state.hidden_layers[hidden_index], 
-                                self.hidden_weights[hidden_index], hidden_errors[i])
-
+            self.update_weights(network_state.hidden_layers[hidden_index], \
+                                self.hidden_weights[hidden_index], \
+                                hidden_errors[i])
         self.update_weights(network_state.input_layer, self.input_weights, hidden_errors[0])
 
 

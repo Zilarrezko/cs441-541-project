@@ -23,7 +23,6 @@ def dealer_sim(hand, deck: Deck):
     return total_value
 
 
-#def perform_action(action, state, hand, dealer_hand, deck: Deck):
 def perform_action(action, player_hand, dealer_hand, deck: Deck):
     player_value = sum(c.value for c in player_hand)
     dealer_value = sum(c.value for c in dealer_hand)
@@ -99,8 +98,7 @@ def run_blackjack(episodes, network: NeuralNetwork, max_steps, alpha, gamma, eps
         dealer_hand = [d1, d2]
         history = []
         for step in range(max_steps):
-
-            #state = State(sum(c.value for c in hand), d1.value)
+            
             input = generate_input(d1.value, [c.value for c in hand])
             network_state = network.execute_forward_propagation(input)
 
@@ -109,16 +107,8 @@ def run_blackjack(episodes, network: NeuralNetwork, max_steps, alpha, gamma, eps
 
             history.insert(0, (network_state, reward))
 
-
-            #Qo = Q.get(state, [0, 0])[action]
-            #Qn = np.max(Q.get(new_state, [0, 0]))
-
-            #Q[state][action] = Qo + alpha * (reward + gamma * Qn - Qo)
-
-
             mean_reward += reward
 
-            # This means we reached a terminal state. and Episode should end.
             if is_game_over == True:
                 update_network(network, history, alpha, gamma)
                 break
@@ -156,7 +146,6 @@ def test_blackjack(episodes, network, max_steps, epsilon):
             action = choose_action(network_state, epsilon)
             is_game_over, reward = perform_action(action, hand, dealer_hand, deck)
 
-            # This means we reached a terminal state. and Episode should end.
             if is_game_over == True:
                 if reward > 0:
                     wins += 1
