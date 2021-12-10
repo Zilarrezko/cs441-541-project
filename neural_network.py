@@ -55,13 +55,12 @@ class NeuralNetwork:
         # After forward propagating through the layers, 
         # the values of the layers and weights are saved into network_state.
         network_state = NetworkState()
-        network_state.input_layer = copy.deepcopy(input)
-        network_state.hidden_layers = copy.deepcopy(hidden_layers)
-        network_state.output_layer = copy.deepcopy(output_layer)
+        network_state.input_layer = input.copy()
+        network_state.hidden_layers = hidden_layers.copy()
+        network_state.output_layer = output_layer.copy()
         network_state.input_weights = copy.deepcopy(self.input_weights)
         network_state.hidden_weights = copy.deepcopy(self.hidden_weights)
         network_state.output_weights = copy.deepcopy(self.output_weights)
-
         return network_state
 
 
