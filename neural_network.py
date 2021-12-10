@@ -3,7 +3,7 @@ import copy
 
 
 LEARNING_RATE: float = 0.1
-MOMENTUM_ENABLED: bool = True
+MOMENTUM_ENABLED: bool = False
 MOMENTUM_VALUE: float = 0.9
 
 
@@ -122,6 +122,3 @@ class NeuralNetwork:
                     new_value += MOMENTUM_VALUE * delta_weights[i][j]   
                 delta_weights[i][j] = weights[i][j] - new_value
                 weights[i][j] = new_value
-
-
-
