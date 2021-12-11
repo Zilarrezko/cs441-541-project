@@ -2,7 +2,7 @@ import numpy as np
 import random
 from blackjack import eval_hand, dealer_sim
 from deck import Deck
-from matplotlib.pyplot import legend, plot, savefig
+from matplotlib.pyplot import legend, plot, savefig, clf
 from neural_network import NetworkState, NeuralNetwork
 
 def choose_action(network_state: NetworkState, E):
@@ -129,11 +129,12 @@ def deep_q_learning_train(num_episodes, network: NeuralNetwork, max_steps, alpha
     plot(drs, label="Draw Rate")
     plot(lrs, label="Loss Rate")
     legend()
-    savefig("q_learning_training.png")
-    with open("q_learning_training.csv", "w") as file:
+    savefig("data/deep_q_learning_training.png")
+    with open("data/deep_q_learning_training.csv", "w") as file:
         file.write("WR, DR, LR\n")
         for i in range(len(wrs)):
             file.write(f"{wrs[i]},{drs[i]},{lrs[i]}\n")
+    clf()
 
 def deep_q_learning_test(episodes, network, max_steps, epsilon):
     wins = 0
