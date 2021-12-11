@@ -1,7 +1,7 @@
 from state import State
 from deck import Deck
 from blackjack import choose_action, perform_action, eval_hand
-from matplotlib.pyplot import legend, plot, savefig
+from matplotlib.pyplot import legend, plot, savefig, clf
 
 def monte_carlo_train(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e):
     num_visits = {}
@@ -76,3 +76,4 @@ def monte_carlo_train(num_episodes, Q, max_steps, alpha, gamma, epsilon, delta_e
         file.write("WR, DR, LR\n")
         for i in range(len(wrs)):
             file.write(f"{wrs[i]},{drs[i]},{lrs[i]}\n")
+    clf()
