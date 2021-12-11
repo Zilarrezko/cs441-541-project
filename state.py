@@ -1,10 +1,7 @@
 class State:
-
-
     def __init__(self, hand, dealer):
         self._hand = hand
         self._dealer = dealer
-
 
     @property
     def hand(self):
